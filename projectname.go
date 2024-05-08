@@ -14,6 +14,15 @@ type PomProject struct {
 	Name    string   `xml:"name"`
 }
 
+type CsProj struct {
+	XMLName        xml.Name        `xml:"Project"`
+	PropertyGroups []PropertyGroup `xml:"PropertyGroup"`
+}
+
+type PropertyGroup struct {
+	ProjectName string `xml:"AssemblyName"`
+}
+
 // ReadProjectName tries to deduce the project name from common configuration files.
 func ReadProjectName(dir string) (string, error) {
 	checkFunctions := []func(string) (string, error){
@@ -24,6 +33,7 @@ func ReadProjectName(dir string) (string, error) {
 		readFromCargoToml,
 		readFromSetupPy,
 		readFromCabal,
+		readFromCsProj,
 	}
 
 	for _, fn := range checkFunctions {
@@ -77,7 +87,7 @@ func readFromGradle(dir string) (string, error) {
 		if strings.HasPrefix(line, "rootProject.name") {
 			parts := strings.Split(line, "=")
 			if len(parts) > 1 {
-				return strings.TrimSpace(parts[1]), nil
+				return strings.Trim(strings.TrimSpace(parts[1]), "'"), nil
 			}
 		}
 	}
@@ -113,11 +123,12 @@ func readFromCargoToml(dir string) (string, error) {
 		if strings.HasPrefix(line, "name =") {
 			parts := strings.Split(line, "=")
 			if len(parts) > 1 {
-				return strings.TrimSpace(strings.Trim(parts[1], "\"")), nil
+				return strings.TrimSpace(strings.Trim(parts[1], " \"")), nil
 			}
 		}
 	}
 	return "", os.ErrNotExist
+
 }
 
 func readFromSetupPy(dir string) (string, error) {
@@ -139,14 +150,14 @@ func readFromSetupPy(dir string) (string, error) {
 }
 
 func readFromCabal(dir string) (string, error) {
-	matches, err := filepath.Glob("*.cabal")
+	matches, err := filepath.Glob(filepath.Join(dir, "*.cabal"))
 	if err != nil {
 		return "", err
 	}
 	if len(matches) == 0 {
 		return "", errors.New("could not find *.cabal")
 	}
-	path := filepath.Join(dir, matches[0])
+	path := matches[0]
 	if len(path) == 0 {
 		return "", os.ErrNotExist
 	}
@@ -162,6 +173,29 @@ func readFromCabal(dir string) (string, error) {
 				return strings.TrimSpace(parts[1]), nil
 			}
 		}
+	}
+	return "", os.ErrNotExist
+}
+
+func readFromCsProj(dir string) (string, error) {
+	path := filepath.Join(dir, "*.csproj")
+	matches, err := filepath.Glob(path)
+	if err != nil {
+		return "", err
+	}
+	if len(matches) == 0 {
+		return "", errors.New("could not find *.csproj")
+	}
+	data, err := os.ReadFile(matches[0])
+	if err != nil {
+		return "", err
+	}
+	var proj CsProj
+	if err := xml.Unmarshal(data, &proj); err != nil {
+		return "", err
+	}
+	if proj.PropertyGroups != nil && len(proj.PropertyGroups) > 0 {
+		return proj.PropertyGroups[0].ProjectName, nil
 	}
 	return "", os.ErrNotExist
 }
