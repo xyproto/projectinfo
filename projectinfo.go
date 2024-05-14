@@ -3,52 +3,63 @@ package projectinfo
 import (
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"strings"
 )
 
 // ProjectInfo holds information about the entire project, useful for generating documentation or other reports.
 type ProjectInfo struct {
 	Name            string     `json:"name"`
-	Repository      string     `json:"repository"`
+	RepoURL         string     `json:"repositoryURL"`
 	SourceFiles     []FileInfo `json:"sourceFiles"`
 	ConfAndDocFiles []FileInfo `json:"confAndDocFiles"`
 	Type            string     `json:"type"`
 	Contributors    string     `json:"contributors"`
-	CurrentReadMe   FileInfo   `json:"currentReadMe"`
+	APIServer       bool       `json:"apiServer"`
 }
 
 func New(dir string) (ProjectInfo, error) {
-	ignores, err := LoadIgnorePatterns(dir, ".ignore", ".gitignore")
-	if err != nil {
-		// skip
-		//return ProjectInfo{}, fmt.Errorf("could not load ignore patterns: %v", err)
-	}
-	sourceFiles, err := CollectFiles(dir, ignores, false)
-	if err != nil {
-		return ProjectInfo{}, fmt.Errorf("error walking directory and collecting files: %v", err)
-	}
-	confAndDocFiles, err := CollectFiles(dir, ignores, true)
-	if err != nil {
-		// skip
-		//return ProjectInfo{}, fmt.Errorf("error walking directory and collecting files: %v", err)
-	}
 	projectName, err := ReadProjectName(dir)
 	if err != nil {
+		// TODO: warn if verbose
 		projectName = "Untitled"
-		//fmt.Fprintf(os.Stderr, "Warning: could not determine the project name: %v\n", err)
 	}
+
+	repoURL, err := URLFromGitConfig(filepath.Join(dir, ".git", "config"))
+	if err != nil {
+		// TODO: warn if verbose
+	}
+
+	ignores, err := LoadIgnorePatterns(dir, ".ignore", ".gitignore")
+	if err != nil {
+		// TODO: warn if verbose
+	}
+
+	sourceFiles, err := CollectFiles(dir, ignores, false)
+	if err != nil {
+		// TODO: warn if verbose
+	}
+
+	confAndDocFiles, err := CollectFiles(dir, ignores, true)
+	if err != nil {
+		// TODO: warn if verbose
+	}
+
 	contributors, err := GitContributors(dir)
 	if err != nil {
-		// skip
-		//return ProjectInfo{}, fmt.Errorf("error collecting git contributors: %v", err)
+		// TODO: warn if verbose
 	}
+
+	apiServer := PossiblyAPIServer(dir)
 
 	return ProjectInfo{
 		Name:            projectName,
+		RepoURL:         repoURL,
 		SourceFiles:     sourceFiles,
 		ConfAndDocFiles: confAndDocFiles,
 		Type:            DetectProjectType(sourceFiles),
 		Contributors:    strings.Join(contributors, ", "),
+		APIServer:       apiServer,
 	}, nil
 }
 
