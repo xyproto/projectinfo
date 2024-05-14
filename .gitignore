@@ -1,4 +1,6 @@
-cmd/pn/pn
+cmd/projectname/projectname
+cmd/countlines/countlines
+cmd/info/info
 *.o
 *.bak
 *.swp
