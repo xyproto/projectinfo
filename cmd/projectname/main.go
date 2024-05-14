@@ -10,7 +10,7 @@ import (
 func main() {
 	// Check for command line arguments
 	if len(os.Args) < 2 {
-		fmt.Println("Usage: main [directory]")
+		fmt.Println("Usage: projectname [directory]")
 		os.Exit(1)
 	}
 
