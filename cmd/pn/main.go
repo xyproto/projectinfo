@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/xyproto/projectname"
+	"github.com/xyproto/projectinfo"
 )
 
 func main() {
@@ -18,7 +18,7 @@ func main() {
 	dir := os.Args[1]
 
 	// Use the ReadProjectName function from the projectname package
-	name, err := projectname.ReadProjectName(dir)
+	name, err := projectinfo.ReadProjectName(dir)
 	if err != nil {
 		fmt.Printf("Failed to read project name: %v\n", err)
 		os.Exit(1)

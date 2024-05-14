@@ -1,4 +1,4 @@
-# projectname
+# projectinfo
 
 Given a directory of source code, try to find the name of the project.
 
@@ -11,7 +11,7 @@ import (
     "fmt"
     "os"
 
-    "github.com/xyproto/projectname"
+    "github.com/xyproto/projectinfo"
 )
 
 func main() {
@@ -24,8 +24,8 @@ func main() {
     // The first argument should be the directory to scan
     dir := os.Args[1]
 
-    // Use the ReadProjectName function from the projectname package
-    name, err := projectname.ReadProjectName(dir)
+    // Use the ReadProjectName function from the projectinfo package
+    name, err := projectinfo.ReadProjectName(dir)
     if err != nil {
         fmt.Printf("Failed to read project name: %v\n", err)
         os.Exit(1)

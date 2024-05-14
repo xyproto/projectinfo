@@ -1,4 +1,4 @@
-package projectname
+package projectinfo
 
 import (
 	"os"

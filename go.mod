@@ -1,3 +1,3 @@
-module github.com/xyproto/projectname
+module github.com/xyproto/projectinfo
 
 go 1.22.2
