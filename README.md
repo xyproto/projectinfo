@@ -1,5 +1,7 @@
 # projectinfo
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/xyproto/projectinfo)](https://goreportcard.com/report/github.com/xyproto/projectinfo) [![GoDoc](https://godoc.org/github.com/xyproto/projectinfo?status.svg)](https://godoc.org/github.com/xyproto/projectinfo) [![License](https://img.shields.io/badge/license-BSD-green.svg?style=flat)](https://raw.githubusercontent.com/xyproto/projectinfo/main/LICENSE)
+
 Given a directory of source code, try to find the name of the project.
 
 Example usage:
