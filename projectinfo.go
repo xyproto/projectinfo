@@ -3,6 +3,7 @@ package projectinfo
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"path/filepath"
 	"strings"
 )
@@ -18,36 +19,46 @@ type ProjectInfo struct {
 	APIServer       bool       `json:"apiServer"`
 }
 
-func New(dir string) (ProjectInfo, error) {
+var maxTokensPerChunk = 250000 // This constant defines the maximum token count per chunk of JSON output to avoid excessive data in one batch.
+
+func SetMaxTokensPerChunk(n int) {
+	maxTokensPerChunk = n
+}
+
+func MaxTokensPerChunk() int {
+	return maxTokensPerChunk
+}
+
+func New(dir string, outputWarnings bool) (ProjectInfo, error) {
 	projectName, err := ReadProjectName(dir)
-	if err != nil {
-		// TODO: warn if verbose
+	if err != nil && outputWarnings {
 		projectName = "Untitled"
+		log.Printf("could not find project name, using %q: %v\n", projectName, err)
 	}
 
 	repoURL, err := URLFromGitConfig(filepath.Join(dir, ".git", "config"))
-	if err != nil {
-		// TODO: warn if verbose
+	if err != nil && outputWarnings {
+		log.Printf("could not find git url from git config: %v\n", err)
 	}
 
 	ignores, err := LoadIgnorePatterns(dir, ".ignore", ".gitignore")
-	if err != nil {
-		// TODO: warn if verbose
+	if err != nil && outputWarnings {
+		log.Printf("could not read .ignore and/or .gitignore: %v\n", err)
 	}
 
 	sourceFiles, err := CollectFiles(dir, ignores, false)
-	if err != nil {
-		// TODO: warn if verbose
+	if err != nil && outputWarnings {
+		log.Printf("could not collect source files: %v\n", err)
 	}
 
 	confAndDocFiles, err := CollectFiles(dir, ignores, true)
-	if err != nil {
-		// TODO: warn if verbose
+	if err != nil && outputWarnings {
+		log.Printf("could not collect documentation and config files: %v\n", err)
 	}
 
 	contributors, err := GitContributors(dir)
-	if err != nil {
-		// TODO: warn if verbose
+	if err != nil && outputWarnings {
+		log.Printf("could not collect contributor names from git: %v\n", err)
 	}
 
 	apiServer := PossiblyAPIServer(dir)
@@ -63,7 +74,11 @@ func New(dir string) (ProjectInfo, error) {
 	}, nil
 }
 
-var MaxTokensPerChunk = 250000 // This constant defines the maximum token count per chunk of JSON output to avoid excessive data in one batch.
+func (project *ProjectInfo) AllFiles() []FileInfo {
+	var files []FileInfo
+	files = append(files, project.SourceFiles...)
+	return append(files, project.ConfAndDocFiles...)
+}
 
 // Chunk breaks down project information into manageable JSON chunks to adhere to token limitations
 func (project *ProjectInfo) Chunk(includeSourceFiles, includeConfAndDocFiles bool) ([]string, error) {
@@ -81,7 +96,7 @@ func (project *ProjectInfo) Chunk(includeSourceFiles, includeConfAndDocFiles boo
 	}
 	for _, file := range files {
 		file.TokenCount = CountTokens(file.Contents) // Compute token count for each file, assuming this function is defined in utils.go.
-		if currentTokenCount+file.TokenCount > MaxTokensPerChunk {
+		if currentTokenCount+file.TokenCount > maxTokensPerChunk {
 			// Finalize the current chunk and reset counters if the maximum token count is exceeded.
 			chunkData, err := json.Marshal(currentChunk)
 			if err != nil {

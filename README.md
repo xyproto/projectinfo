@@ -17,11 +17,12 @@ import (
 )
 
 func OutputChunks(dir string) error {
-    pi, err := projectinfo.New(dir)
+    const printWarnings = true
+    pInfo, err := projectinfo.New(dir, printWarnings)
     if err != nil {
         return err
     }
-    chunks, err := pi.Chunk(true, true)
+    chunks, err := pInfo.Chunk(true, true)
     if err != nil {
         return err
     }
@@ -51,5 +52,5 @@ func main() {
 
 ## General info
 
-* Version: 1.1.1
+* Version: 1.2.0
 * License: BSD-3

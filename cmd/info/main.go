@@ -8,11 +8,12 @@ import (
 )
 
 func OutputChunks(dir string) error {
-	pi, err := projectinfo.New(dir)
+	const printWarnings = true
+	pInfo, err := projectinfo.New(dir, printWarnings)
 	if err != nil {
 		return err
 	}
-	chunks, err := pi.Chunk(true, true)
+	chunks, err := pInfo.Chunk(true, true)
 	if err != nil {
 		return err
 	}
