@@ -48,6 +48,11 @@ func CollectFiles(dir string, ignores map[string]struct{}, catalogFlag bool) ([]
 				}
 				stringContent := string(utf8Content)
 				lineCount, _ := CountLines(stringContent)
+
+				if relativePath, err := filepath.Rel(dir, path); err == nil { // success
+					path = relativePath
+				}
+
 				files = append(files, FileInfo{
 					Path:         path,
 					Language:     language,
