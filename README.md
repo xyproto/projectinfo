@@ -42,6 +42,9 @@ func main() {
     // The first argument should be the directory to scan
     dir := os.Args[1]
 
+    // Set the maximum token limit per chunk (approximate)
+    projectinfo.SetMaxTokensPerChunk(16 * 1024)
+
     if err := OutputChunks(dir); err != nil {
         fmt.Printf("Failed to output project chunks: %v\n", err)
         os.Exit(1)
