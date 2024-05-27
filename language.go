@@ -18,6 +18,18 @@ func RecognizedExtension(path string, docAndConf bool) bool {
 	return false
 }
 
+// RecognizedFilename checks if the given path is a recgonized filename, like "LICENSE"
+func RecognizedFilename(path string, docAndConf bool) bool {
+	if !docAndConf {
+		return false
+	}
+	switch strings.ToLower(filepath.Base(path)) {
+	case "COPYING", "LICENSE", "NOTICE":
+		return true
+	}
+	return false
+}
+
 // LanguageFromExtension determines the programming language from the file extension
 func LanguageFromExtension(ext string) string {
 	switch ext {
@@ -71,7 +83,7 @@ func DetectProjectType(files []FileInfo) string {
 		languageCount[file.Language]++
 	}
 	maxCount := 0
-	projectType := "Unknown"
+	projectType := "Unrecognized"
 	for lang, count := range languageCount {
 		if count > maxCount {
 			maxCount = count

@@ -12,16 +12,17 @@ import (
 
 // FileInfo represents information about a file in the project, including its content-related attributes
 type FileInfo struct {
-	Path         string `json:"path"`
-	Language     string `json:"language"`
-	LastModified string `json:"last_modified,omitempty"`
-	Contents     string `json:"contents,omitempty"`
-	LineCount    int    `json:"line_count,omitempty"`
-	TokenCount   int    `json:"token_count"`
+	Path         string   `json:"path"`
+	Language     string   `json:"language"`
+	LastModified string   `json:"last_modified,omitempty"`
+	Contents     string   `json:"contents,omitempty"`
+	LineCount    int      `json:"line_count,omitempty"`
+	TokenCount   int      `json:"token_count"`
+	Contributors []string `json:"contributors"`
 }
 
 // CollectFiles walks through a directory recursively and collects files that have the right extensions
-func CollectFiles(dir string, ignores map[string]struct{}, catalogFlag bool) ([]FileInfo, error) {
+func CollectFiles(dir string, ignores map[string]struct{}, alsoDocOrConf, alsoContributors bool) ([]FileInfo, error) {
 	var files []FileInfo
 	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -30,7 +31,7 @@ func CollectFiles(dir string, ignores map[string]struct{}, catalogFlag bool) ([]
 		if d.IsDir() && ShouldSkip(path, ignores) {
 			return fs.SkipDir
 		}
-		if !d.IsDir() && RecognizedExtension(path, catalogFlag) {
+		if !d.IsDir() && (RecognizedExtension(path, alsoDocOrConf) || RecognizedFilename(path, alsoDocOrConf)) {
 			ext := filepath.Ext(path)
 			language := LanguageFromExtension(ext)
 			if language != "Unknown" {
@@ -54,6 +55,7 @@ func CollectFiles(dir string, ignores map[string]struct{}, catalogFlag bool) ([]
 					LineCount:    lineCount,
 					LastModified: fileInfo.ModTime().Format("2006-01-02 15:04:05"),
 					Contents:     stringContent,
+					Contributors: maybeGitContributorsForFile(path),
 				})
 			}
 		}

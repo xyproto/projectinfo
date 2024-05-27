@@ -46,12 +46,15 @@ func New(dir string, outputWarnings bool) (ProjectInfo, error) {
 		log.Printf("could not read .ignore and/or .gitignore: %v\n", err)
 	}
 
-	sourceFiles, err := CollectFiles(dir, ignores, false)
+	var alsoDocAndConf bool
+	const alsoGitContributors = true
+	sourceFiles, err := CollectFiles(dir, ignores, alsoDocAndConf, alsoGitContributors)
 	if err != nil && outputWarnings {
 		log.Printf("could not collect source files: %v\n", err)
 	}
 
-	confAndDocFiles, err := CollectFiles(dir, ignores, true)
+	alsoDocAndConf = true
+	confAndDocFiles, err := CollectFiles(dir, ignores, alsoDocAndConf, alsoGitContributors)
 	if err != nil && outputWarnings {
 		log.Printf("could not collect documentation and config files: %v\n", err)
 	}
@@ -75,9 +78,7 @@ func New(dir string, outputWarnings bool) (ProjectInfo, error) {
 }
 
 func (project *ProjectInfo) AllFiles() []FileInfo {
-	var files []FileInfo
-	files = append(files, project.SourceFiles...)
-	return append(files, project.ConfAndDocFiles...)
+	return append(project.SourceFiles, project.ConfAndDocFiles...)
 }
 
 // Chunk breaks down project information into manageable JSON chunks to adhere to token limitations
