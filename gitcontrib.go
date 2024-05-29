@@ -13,6 +13,12 @@ import (
 
 // maybeGitContriburorsForFile returns a slice of contributors for a given file, or an empty slice
 func maybeGitContributorsForFile(path string) []string {
+	currentDirectory, err := os.Getwd()
+	if err != nil {
+		return []string{}
+	}
+	defer os.Chdir(currentDirectory)
+
 	dir := filepath.Dir(path)
 	if err := os.Chdir(dir); err != nil {
 		return []string{}
@@ -39,14 +45,20 @@ func maybeGitContributorsForFile(path string) []string {
 
 // Contributors uses the Git command line to fetch a list of contributors sorted by the number of commits
 func GitContributors(path string) ([]string, error) {
+	currentDirectory, err := os.Getwd()
+	if err != nil {
+		return []string{}, err
+	}
+	defer os.Chdir(currentDirectory)
+
 	// Ensure we're in the right path or git might not find the .git path
 	if err := os.Chdir(path); err != nil {
-		return nil, err
+		return []string{}, err
 	}
 	cmd := exec.Command("git", "shortlog", "-sn", "--all", "--no-merges")
 	output, err := cmd.Output()
 	if err != nil {
-		return nil, fmt.Errorf("failed to execute git command: %v", err)
+		return []string{}, fmt.Errorf("failed to execute git command: %v", err)
 	}
 	scanner := bufio.NewScanner(strings.NewReader(string(output)))
 	var contributors []string
