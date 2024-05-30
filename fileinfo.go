@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/fs"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -26,7 +27,8 @@ func CollectFiles(dir string, ignores map[string]struct{}, alsoDocOrConf, alsoCo
 	var files []FileInfo
 	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
-			return err
+			log.Printf("Error accessing path %s: %v\n", path, err)
+			return nil // Continue to the next file
 		}
 		if d.IsDir() && ShouldSkip(path, ignores) {
 			return fs.SkipDir
@@ -37,15 +39,18 @@ func CollectFiles(dir string, ignores map[string]struct{}, alsoDocOrConf, alsoCo
 			if language != "Unknown" {
 				fileInfo, err := os.Stat(path)
 				if err != nil {
-					return err
+					log.Printf("Error getting file info for %s: %v\n", path, err)
+					return nil // Continue to the next file
 				}
 				content, err := os.ReadFile(path)
 				if err != nil {
-					return err
+					log.Printf("Error reading file %s: %v\n", path, err)
+					return nil // Continue to the next file
 				}
 				utf8Content, err := ConvertToUTF8(content)
 				if err != nil {
-					return err // Handle files that cannot be converted to UTF-8
+					log.Printf("Error converting file %s to UTF-8: %v\n", path, err)
+					return nil // Continue to the next file
 				}
 				stringContent := string(utf8Content)
 				lineCount, _ := CountLines(stringContent)
@@ -61,10 +66,7 @@ func CollectFiles(dir string, ignores map[string]struct{}, alsoDocOrConf, alsoCo
 		}
 		return nil
 	})
-	if err != nil {
-		return nil, err
-	}
-	return files, nil
+	return files, err
 }
 
 // ConvertToUTF8 attempts to convert a byte slice to UTF-8 encoding, managing non-UTF8 encoded parts.
