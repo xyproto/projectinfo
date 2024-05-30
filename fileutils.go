@@ -39,3 +39,11 @@ func URLFromGitConfig(configFilePath string) (string, error) {
 	}
 	return "", fmt.Errorf("no URL found in %s", configFilePath)
 }
+
+func isDir(path string) bool {
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return fileInfo.IsDir()
+}

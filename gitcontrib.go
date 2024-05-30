@@ -11,19 +11,14 @@ import (
 
 // TODO: Use a Go module instead of the git command
 
-// maybeGitContriburorsForFile returns a slice of contributors for a given file, or an empty slice
+// maybeGitContriburorsForFile returns a slice of contributors for a given file or directory
 func maybeGitContributorsForFile(path string) []string {
-	currentDirectory, err := os.Getwd()
-	if err != nil {
-		return []string{}
-	}
-	defer os.Chdir(currentDirectory)
-
-	dir := filepath.Dir(path)
-	if err := os.Chdir(dir); err != nil {
-		return []string{}
+	dir := path
+	if !isDir(path) {
+		dir = filepath.Dir(path)
 	}
 	cmd := exec.Command("git", "shortlog", "-sn", "--all", "--no-merges", path)
+	cmd.Dir = dir
 	output, err := cmd.Output()
 	if err != nil {
 		return []string{}
