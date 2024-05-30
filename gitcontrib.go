@@ -3,7 +3,6 @@ package projectinfo
 import (
 	"bufio"
 	"fmt"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -40,17 +39,12 @@ func maybeGitContributorsForFile(path string) []string {
 
 // Contributors uses the Git command line to fetch a list of contributors sorted by the number of commits
 func GitContributors(path string) ([]string, error) {
-	currentDirectory, err := os.Getwd()
-	if err != nil {
-		return []string{}, err
-	}
-	defer os.Chdir(currentDirectory)
-
-	// Ensure we're in the right path or git might not find the .git path
-	if err := os.Chdir(path); err != nil {
-		return []string{}, err
+	dir := path
+	if !isDir(path) {
+		dir = filepath.Dir(path)
 	}
 	cmd := exec.Command("git", "shortlog", "-sn", "--all", "--no-merges")
+	cmd.Dir = dir
 	output, err := cmd.Output()
 	if err != nil {
 		return []string{}, fmt.Errorf("failed to execute git command: %v", err)
