@@ -17,38 +17,38 @@ type ProjectInfo struct {
 	APIServer       bool       `json:"apiServer"`
 }
 
-func New(dir string, outputWarnings bool) (ProjectInfo, error) {
+func New(dir string, verbose bool) (ProjectInfo, error) {
 	projectName, err := ReadProjectName(dir)
-	if err != nil && outputWarnings {
+	if err != nil && verbose {
 		projectName = "Untitled"
 		log.Printf("could not find project name, using %q: %v\n", projectName, err)
 	}
 
 	repoURL, err := URLFromGitConfig(filepath.Join(dir, ".git", "config"))
-	if err != nil && outputWarnings {
+	if err != nil && verbose {
 		log.Printf("could not find git url from git config: %v\n", err)
 	}
 
 	ignores, err := LoadIgnorePatterns(dir, ".ignore", ".gitignore")
-	if err != nil && outputWarnings {
+	if err != nil && verbose {
 		log.Printf("could not read .ignore and/or .gitignore: %v\n", err)
 	}
 
 	var alsoDocAndConf bool
 	const alsoGitContributors = true
-	sourceFiles, err := CollectFiles(dir, ignores, alsoDocAndConf, alsoGitContributors)
-	if err != nil && outputWarnings {
+	sourceFiles, err := CollectFiles(dir, ignores, alsoDocAndConf, alsoGitContributors, verbose)
+	if err != nil && verbose {
 		log.Printf("could not collect source files: %v\n", err)
 	}
 
 	alsoDocAndConf = true
-	confAndDocFiles, err := CollectFiles(dir, ignores, alsoDocAndConf, alsoGitContributors)
-	if err != nil && outputWarnings {
+	confAndDocFiles, err := CollectFiles(dir, ignores, alsoDocAndConf, alsoGitContributors, verbose)
+	if err != nil && verbose {
 		log.Printf("could not collect documentation and config files: %v\n", err)
 	}
 
 	contributors, err := GitContributors(dir)
-	if err != nil && outputWarnings {
+	if err != nil && verbose {
 		log.Printf("could not collect contributor names from git: %v\n", err)
 	}
 

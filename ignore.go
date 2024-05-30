@@ -24,7 +24,7 @@ func LoadIgnorePatterns(filenames ...string) (map[string]struct{}, error) {
 		}
 	}
 	// Add common ignores typically found in projects
-	commonIgnores := []string{"vendor", "test", "tmp", "backup", "node_modules", "target", ".mvn", ".gradle"}
+	commonIgnores := []string{"vendor", "test", "tmp", "backup", "node_modules", "target", ".mvn", ".gradle", ".git"}
 	for _, dir := range commonIgnores {
 		ignores[dir] = struct{}{}
 	}

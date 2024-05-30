@@ -23,21 +23,27 @@ type FileInfo struct {
 }
 
 // CollectFiles walks through a directory recursively and collects files that have the right extensions
-func CollectFiles(dir string, ignores map[string]struct{}, alsoDocOrConf, alsoContributors bool) ([]FileInfo, error) {
+func CollectFiles(dir string, ignores map[string]struct{}, alsoDocOrConf, alsoContributors, verbose bool) ([]FileInfo, error) {
 	var files []FileInfo
 	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+		if verbose {
+			fmt.Printf("Visiting: %s\n", path)
+		}
 		if err != nil {
 			log.Printf("Error accessing path %s: %v\n", path, err)
 			return nil // Continue to the next file
 		}
-		if d.IsDir() && ShouldSkip(path, ignores) {
-			return fs.SkipDir
+		if ShouldSkip(path, ignores) {
+			if d.IsDir() {
+				return fs.SkipDir
+			}
+			return nil // Skip file
 		}
 		if !d.IsDir() && (RecognizedExtension(path, alsoDocOrConf) || RecognizedFilename(path, alsoDocOrConf)) {
 			ext := filepath.Ext(path)
 			language := LanguageFromExtension(ext)
 			if language != "Unknown" {
-				fileInfo, err := os.Stat(path)
+				fi, err := os.Stat(path)
 				if err != nil {
 					log.Printf("Error getting file info for %s: %v\n", path, err)
 					return nil // Continue to the next file
@@ -54,14 +60,17 @@ func CollectFiles(dir string, ignores map[string]struct{}, alsoDocOrConf, alsoCo
 				}
 				stringContent := string(utf8Content)
 				lineCount, _ := CountLines(stringContent)
-				files = append(files, FileInfo{
+				fileInfo := FileInfo{
 					Path:         path,
 					Language:     language,
 					LineCount:    lineCount,
-					LastModified: fileInfo.ModTime().Format("2006-01-02 15:04:05"),
+					LastModified: fi.ModTime().Format("2006-01-02 15:04:05"),
 					Contents:     stringContent,
-					Contributors: maybeGitContributorsForFile(path),
-				})
+				}
+				if alsoContributors {
+					fileInfo.Contributors = maybeGitContributorsForFile(path)
+				}
+				files = append(files, fileInfo)
 			}
 		}
 		return nil
