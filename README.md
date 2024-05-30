@@ -55,5 +55,5 @@ func main() {
 
 ## General info
 
-* Version: 1.3.4
+* Version: 1.3.5
 * License: BSD-3
