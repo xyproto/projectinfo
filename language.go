@@ -24,7 +24,7 @@ func RecognizedFilename(path string, docAndConf bool) bool {
 		return false
 	}
 	switch strings.ToLower(filepath.Base(path)) {
-	case "COPYING", "LICENSE", "NOTICE":
+	case "copying", "license", "notice", "makefile":
 		return true
 	}
 	return false
@@ -69,6 +69,8 @@ func LanguageFromExtension(ext string) string {
 		return "TypeScript"
 	case ".txt":
 		return "Plain text"
+	case ".xml":
+		return "XML"
 	case ".yml", ".yaml":
 		return "YAML"
 	default:
